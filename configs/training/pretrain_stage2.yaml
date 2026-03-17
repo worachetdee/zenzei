@@ -1,0 +1,54 @@
+# Zensei Stage 2: Full Continued Pretraining
+# All parameters unfrozen for full model training.
+#
+# Launch:
+#   deepspeed --num_gpus 8 zensei/training/pretrain.py \
+#       --config configs/training/pretrain_stage2.yaml
+
+model_config: configs/model/zensei_671B.json
+
+# Stage
+stage: 2
+freeze_backbone: false
+
+# Optimizer / LR
+learning_rate: 1.0e-5
+min_lr: 1.0e-6
+warmup_steps: 1000
+weight_decay: 0.1
+
+# Training
+max_steps: 200000
+batch_size: 1024
+gradient_accumulation_steps: 16
+max_seq_len: 4096
+gradient_clip: 1.0
+
+# MoE auxiliary loss weight
+aux_loss_weight: 0.01
+
+# Checkpointing
+checkpoint_dir: checkpoints/stage2
+checkpoint_interval: 5000
+keep_last_n_checkpoints: 5
+
+# Evaluation
+eval_interval: 2000
+max_eval_batches: 50
+eval_batch_size: 4
+
+# DeepSpeed
+zero_stage: 3
+bf16: true
+offload_optimizer: false
+offload_param: false
+
+# Data
+data_path: data/pretokenized
+tokenizer_path: data/tokenizer/zensei_ja_sp.model
+
+# Logging
+log_interval: 10
+use_wandb: true
+wandb_project: zensei
+wandb_run_name: stage2-full-cpt

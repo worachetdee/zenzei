@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zensei"
+version = "0.1.0"
+description = "Zensei (禅精) — DeepSeek-V3 Fork Optimized for Japanese"
+readme = "README.md"
+license = {file = "LICENSE-CODE"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Zensei Contributors"},
+]
+keywords = ["llm", "japanese", "deepseek", "moe", "pretraining"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.1",
+    "triton>=2.1",
+    "transformers>=4.36",
+    "sentencepiece>=0.2",
+    "deepspeed>=0.12",
+    "peft>=0.7",
+    "fastapi>=0.104",
+    "uvicorn>=0.24",
+    "fugashi[unidic-lite]",
+    "datasketch>=1.6",
+    "datasets>=2.16",
+    "numpy",
+    "tqdm",
+    "fire",
+    "wandb",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy",
+]
+
+[project.scripts]
+zensei-train = "zensei.cli.train:main"
+zensei-eval = "zensei.cli.eval:main"
+zensei-serve = "zensei.cli.serve:main"
+
+[tool.setuptools.packages.find]
+include = ["zensei*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["zensei"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

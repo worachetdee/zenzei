@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.eggs/
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+
+# Weights & Biases
+wandb/
+
+# Model weights
+*.pt
+*.bin
+*.safetensors
+
+# Data
+data/raw/
+data/processed/
+*.mmap
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# mypy
+.mypy_cache/
+
+# pytest
+.pytest_cache/
+
+# ruff
+.ruff_cache/

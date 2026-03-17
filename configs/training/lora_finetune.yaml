@@ -1,0 +1,57 @@
+# Zensei LoRA Fine-tuning Configuration
+#
+# Usage:
+#   deepspeed --num_gpus 8 zensei/training/pretrain.py \
+#       --config configs/training/lora_finetune.yaml
+
+model_config: configs/model/zensei_671B.json
+
+# LoRA
+lora_r: 64
+lora_alpha: 128
+lora_dropout: 0.05
+target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# Optimizer / LR
+learning_rate: 2.0e-4
+min_lr: 1.0e-5
+warmup_steps: 100
+weight_decay: 0.05
+
+# Training
+max_steps: 10000
+batch_size: 32
+gradient_accumulation_steps: 4
+max_seq_len: 4096
+gradient_clip: 1.0
+
+# Checkpointing
+checkpoint_dir: checkpoints/lora
+checkpoint_interval: 1000
+keep_last_n_checkpoints: 3
+
+# Evaluation
+eval_interval: 500
+max_eval_batches: 50
+eval_batch_size: 4
+
+# DeepSpeed
+zero_stage: 2
+bf16: true
+
+# Data
+data_path: data/pretokenized
+tokenizer_path: data/tokenizer/zensei_ja_sp.model
+
+# Logging
+log_interval: 10
+use_wandb: true
+wandb_project: zensei
+wandb_run_name: lora-finetune

@@ -1,0 +1,23 @@
+# Tokenizer training configuration
+input_dir: "data/raw/ja_corpus"
+model_prefix: "data/tokenizer/zensei_ja_sp"
+vocab_size: 32000
+model_type: "bpe"
+character_coverage: 0.9995
+normalization_rule_name: "nfkc"
+byte_fallback: true
+split_digits: true
+max_sentence_length: 16384
+num_threads: 16
+train_extremely_large_corpus: true
+
+# Special tokens
+pad_id: 0
+unk_id: 1
+bos_id: 2
+eos_id: 3
+
+# Merge settings
+base_tokenizer: "deepseek-ai/DeepSeek-V3"
+max_new_tokens: 16128
+output_dir: "data/tokenizer/zensei_merged"

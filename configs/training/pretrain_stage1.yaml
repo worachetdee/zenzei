@@ -1,0 +1,51 @@
+# Zensei Stage 1: Embedding Warmup
+# Freeze backbone, train only embed + lm_head layers.
+#
+# Launch:
+#   deepspeed --num_gpus 8 zensei/training/pretrain.py \
+#       --config configs/training/pretrain_stage1.yaml
+
+model_config: configs/model/zensei_671B.json
+
+# Stage
+stage: 1
+freeze_backbone: true
+
+# Optimizer / LR
+learning_rate: 1.0e-3
+min_lr: 1.0e-4
+warmup_steps: 500
+weight_decay: 0.1
+
+# Training
+max_steps: 5000
+batch_size: 256
+gradient_accumulation_steps: 8
+max_seq_len: 4096
+gradient_clip: 1.0
+
+# Checkpointing
+checkpoint_dir: checkpoints/stage1
+checkpoint_interval: 1000
+keep_last_n_checkpoints: 5
+
+# Evaluation
+eval_interval: 500
+max_eval_batches: 50
+eval_batch_size: 4
+
+# DeepSpeed
+zero_stage: 3
+bf16: true
+offload_optimizer: false
+offload_param: false
+
+# Data
+data_path: data/pretokenized
+tokenizer_path: data/tokenizer/zensei_ja_sp.model
+
+# Logging
+log_interval: 10
+use_wandb: true
+wandb_project: zensei
+wandb_run_name: stage1-embed-warmup
