@@ -264,7 +264,7 @@ def test_tokenizer(device: str, skip: bool):
             spm.SentencePieceTrainer.train(
                 input=corpus_path,
                 model_prefix=model_prefix,
-                vocab_size=500,
+                vocab_size=1000,
                 model_type="bpe",
                 character_coverage=0.9995,
                 byte_fallback=True,
@@ -475,15 +475,17 @@ def test_training(device: str):
     t0 = time.time()
     try:
         model.train()
-        optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=3e-3, weight_decay=0.0)
         losses = []
-        batch_size, seq_len = 4, 32
+        batch_size, seq_len = 8, 32
+        n_steps = 20
 
-        for step in range(10):
-            tokens = torch.randint(0, tiny_args.vocab_size, (batch_size, seq_len), device=device)
-            # Shift targets: predict next token
-            inputs = tokens[:, :-1]
-            targets = tokens[:, 1:]
+        # Use a fixed repeated batch so the model can memorize it
+        fixed_tokens = torch.randint(0, tiny_args.vocab_size, (batch_size, seq_len), device=device)
+
+        for step in range(n_steps):
+            inputs = fixed_tokens[:, :-1]
+            targets = fixed_tokens[:, 1:]
 
             logits, aux_loss = model(inputs)
             loss = torch.nn.functional.cross_entropy(
@@ -494,15 +496,16 @@ def test_training(device: str):
 
             optimizer.zero_grad()
             total_loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             losses.append(loss.item())
 
-        # Check that loss decreased (first vs last, with some tolerance)
+        # Check that loss decreased (first 3 vs last 3)
         first_loss = sum(losses[:3]) / 3
         last_loss = sum(losses[-3:]) / 3
         decreased = last_loss < first_loss
         record(
-            phase, "10 training steps (loss decreases)", decreased,
+            phase, f"{n_steps} training steps (loss decreases)", decreased,
             f"first_avg={first_loss:.4f}, last_avg={last_loss:.4f}",
             time.time() - t0,
         )
