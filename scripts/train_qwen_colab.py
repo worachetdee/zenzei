@@ -23,7 +23,7 @@ os.chdir("/content/zenzei")
 MODEL_NAME = "Qwen/Qwen2.5-7B"
 DATA_BIN = "data/processed/ja_wiki.bin"
 DATA_IDX = "data/processed/ja_wiki.idx"
-OUTPUT_DIR = "checkpoints/zensei-7b-ja"
+OUTPUT_DIR = "/content/drive/MyDrive/zensei_checkpoints/zensei-7b-ja"
 LOG_DIR = "logs"
 
 # Training hyperparameters
@@ -34,7 +34,7 @@ LEARNING_RATE = 2e-4
 NUM_EPOCHS = 1
 MAX_STEPS = 1000         # Stop early for validation; set -1 for full epoch
 WARMUP_STEPS = 50
-SAVE_STEPS = 200
+SAVE_STEPS = 100          # Save more frequently to survive disconnects
 LOG_STEPS = 10
 
 # LoRA config
@@ -118,20 +118,36 @@ def main():
     print(f"  Parameters: {sum(p.numel() for p in model.parameters()):,}")
 
     # --------------------------------------------------------
-    # Step 2: Apply LoRA
+    # Step 2: Apply LoRA (or resume from checkpoint)
     # --------------------------------------------------------
-    print("\n[2/4] Applying LoRA...")
-    from peft import LoraConfig, get_peft_model, TaskType
+    from peft import LoraConfig, get_peft_model, PeftModel, TaskType
 
-    lora_config = LoraConfig(
-        task_type=TaskType.CAUSAL_LM,
-        r=LORA_R,
-        lora_alpha=LORA_ALPHA,
-        lora_dropout=LORA_DROPOUT,
-        target_modules=LORA_TARGET_MODULES,
-        bias="none",
-    )
-    model = get_peft_model(model, lora_config)
+    # Check for existing checkpoint to resume from
+    resume_step = 0
+    if os.path.exists(OUTPUT_DIR):
+        existing = sorted([
+            d for d in os.listdir(OUTPUT_DIR)
+            if d.startswith("step_") and os.path.isdir(os.path.join(OUTPUT_DIR, d))
+        ])
+        if existing:
+            latest = existing[-1]
+            latest_path = os.path.join(OUTPUT_DIR, latest)
+            resume_step = int(latest.split("_")[1])
+            print(f"\n[2/4] Resuming from checkpoint: {latest} (step {resume_step})")
+            model = PeftModel.from_pretrained(model, latest_path)
+            print(f"  Loaded LoRA weights from {latest_path}")
+
+    if resume_step == 0:
+        print("\n[2/4] Applying LoRA (fresh start)...")
+        lora_config = LoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            r=LORA_R,
+            lora_alpha=LORA_ALPHA,
+            lora_dropout=LORA_DROPOUT,
+            target_modules=LORA_TARGET_MODULES,
+            bias="none",
+        )
+        model = get_peft_model(model, lora_config)
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total = sum(p.numel() for p in model.parameters())
     print(f"  Trainable: {trainable:,} / {total:,} "
@@ -177,15 +193,26 @@ def main():
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
     model.train()
-    global_step = 0
+    global_step = resume_step
     total_loss = 0.0
     log_losses = []
     best_loss = float("inf")
     t_start = time.time()
 
+    # Number of batches to skip if resuming
+    skip_batches = resume_step * GRAD_ACCUM_STEPS
+    if resume_step > 0:
+        print(f"  Resuming from step {resume_step}, skipping {skip_batches} batches...")
+
     print()
     for epoch in range(NUM_EPOCHS):
         for batch_idx, input_ids in enumerate(dataloader):
+            # Skip batches we already trained on
+            if batch_idx < skip_batches:
+                if batch_idx % 1000 == 0 and batch_idx > 0:
+                    print(f"  Skipping batch {batch_idx}/{skip_batches}...")
+                continue
+
             input_ids = input_ids.to(device)
 
             # Forward pass (causal LM: labels = input_ids)
