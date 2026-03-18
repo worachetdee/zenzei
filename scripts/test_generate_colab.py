@@ -4,7 +4,7 @@ import torch
 
 os.chdir("/content/zenzei")
 
-CHECKPOINT_DIR = "checkpoints/zensei-7b-ja/final"
+CHECKPOINT_DIR = "/content/drive/MyDrive/zensei_checkpoints/zensei-7b-ja-v2/final"
 BASE_MODEL = "Qwen/Qwen2.5-7B"
 
 print("=" * 60)
