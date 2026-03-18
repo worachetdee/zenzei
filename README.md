@@ -86,6 +86,10 @@ zensei/
 └── LICENSE-MODEL           # DeepSeek Model License (weights)
 ```
 
+## Sister Project
+
+**[Nirasa (นิราศ)](https://github.com/worachetdee/nirasa)** — Same methodology applied to Thai language using Qwen2.5-7B. Includes 14 legally clear Thai data sources, LoRA training, and Thai-specific evaluation benchmarks.
+
 ## License
 
 - **Code**: Released under the [MIT License](LICENSE-CODE).
