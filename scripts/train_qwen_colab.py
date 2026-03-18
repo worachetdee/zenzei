@@ -21,9 +21,9 @@ os.chdir("/content/zenzei")
 # Config
 # ============================================================
 MODEL_NAME = "Qwen/Qwen2.5-7B"
-DATA_BIN = "data/processed/ja_wiki.bin"
-DATA_IDX = "data/processed/ja_wiki.idx"
-OUTPUT_DIR = "/content/drive/MyDrive/zensei_checkpoints/zensei-7b-ja"
+DATA_BIN = "data/processed/ja_wiki_qwen.bin"
+DATA_IDX = "data/processed/ja_wiki_qwen.idx"
+OUTPUT_DIR = "/content/drive/MyDrive/zensei_checkpoints/zensei-7b-ja-v2"
 LOG_DIR = "logs"
 
 # Training hyperparameters
@@ -65,7 +65,8 @@ class MemmapDataset(Dataset):
         self.total_tokens = index["total_tokens"]
 
         # Load binary as memmap
-        self.tokens = np.memmap(bin_path, dtype=np.uint16, mode="r",
+        dtype = index.get("dtype", "uint16")
+        self.tokens = np.memmap(bin_path, dtype=dtype, mode="r",
                                 shape=(self.total_tokens,))
 
         # Number of full sequences we can extract
